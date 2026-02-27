@@ -7,7 +7,21 @@ class ContactValidation {
     first_name: z.string().min(1).max(100),
     last_name: z.string().min(1).max(100).optional(),
     phone: z.string().min(1).max(20).optional(),
-    // ✅ Backslash sebelum titik di dalam kurung siku pertama sudah dihapus
+    email: z
+      .string()
+      .min(1)
+      .max(100)
+      .regex(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/, {
+        message: 'Invalid email format',
+      })
+      .optional(),
+  });
+
+  static readonly UPDATE = z.object({
+    id: z.number().positive(),
+    first_name: z.string().min(1).max(100),
+    last_name: z.string().min(1).max(100).optional(),
+    phone: z.string().min(1).max(20).optional(),
     email: z
       .string()
       .min(1)
