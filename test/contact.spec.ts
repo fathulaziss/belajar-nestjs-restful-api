@@ -213,4 +213,141 @@ describe('ContactController', () => {
       });
     });
   });
+
+  describe('GET /api/contacts', () => {
+    beforeEach(async () => {
+      await testService.deleteContact();
+      await testService.deleteUser();
+      await testService.createUser();
+      await testService.createContact();
+    });
+
+    it('should be able to search contacts', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/api/contacts`)
+        .set('authorization', 'test');
+
+      logger.info(response.body);
+
+      expect(response.status).toBe(200);
+      const body = response.body as { data: [] };
+      expect(body.data).toHaveLength(1);
+    });
+
+    it('should be able to search contacts by name', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/api/contacts`)
+        .query({
+          name: 'es',
+        })
+        .set('authorization', 'test');
+
+      logger.info(response.body);
+
+      expect(response.status).toBe(200);
+      const body = response.body as { data: [] };
+      expect(body.data).toHaveLength(1);
+    });
+
+    it('should be able to search contacts by name not found', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/api/contacts`)
+        .query({
+          name: 'wrong',
+        })
+        .set('authorization', 'test');
+
+      logger.info(response.body);
+
+      expect(response.status).toBe(200);
+      const body = response.body as { data: [] };
+      expect(body.data).toHaveLength(0);
+    });
+
+    it('should be able to search contacts by email', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/api/contacts`)
+        .query({
+          email: 'es',
+        })
+        .set('authorization', 'test');
+
+      logger.info(response.body);
+
+      expect(response.status).toBe(200);
+      const body = response.body as { data: [] };
+      expect(body.data).toHaveLength(1);
+    });
+
+    it('should be able to search contacts by email not found', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/api/contacts`)
+        .query({
+          email: 'wrong',
+        })
+        .set('authorization', 'test');
+
+      logger.info(response.body);
+
+      expect(response.status).toBe(200);
+      const body = response.body as { data: [] };
+      expect(body.data).toHaveLength(0);
+    });
+
+    it('should be able to search contacts by phone', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/api/contacts`)
+        .query({
+          phone: '99',
+        })
+        .set('authorization', 'test');
+
+      logger.info(response.body);
+
+      expect(response.status).toBe(200);
+      const body = response.body as { data: [] };
+      expect(body.data).toHaveLength(1);
+    });
+
+    it('should be able to search contacts by phone not found', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/api/contacts`)
+        .query({
+          phone: '88',
+        })
+        .set('authorization', 'test');
+
+      logger.info(response.body);
+
+      expect(response.status).toBe(200);
+      const body = response.body as { data: [] };
+      expect(body.data).toHaveLength(0);
+    });
+
+    it('should be able to search contacts with page', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/api/contacts`)
+        .query({
+          size: 1,
+          page: 2,
+        })
+        .set('authorization', 'test');
+
+      logger.info(response.body);
+
+      expect(response.status).toBe(200);
+      const body = response.body as {
+        data: [];
+        paging: {
+          current_page: number;
+          total_page: number;
+          size: number;
+        };
+      };
+      expect(body.data).toHaveLength(0);
+      expect(body.paging.current_page).toBe(2);
+      expect(body.paging.total_page).toBe(1);
+      expect(body.paging.size).toBe(1);
+    });
+  });
 });
