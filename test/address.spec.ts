@@ -7,6 +7,7 @@ import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { TestService } from './test.service';
 import { TestModule } from './test.module';
+import { AddressResponse } from '../src/model/address.model';
 
 describe('AddressController', () => {
   let app: INestApplication<App>;
@@ -281,6 +282,47 @@ describe('AddressController', () => {
 
       const addressResult = await testService.getAddress();
       expect(addressResult).toBeNull();
+    });
+  });
+
+  describe('GET /api/contacts/:contactId/addresses', () => {
+    beforeEach(async () => {
+      await testService.deleteAddress();
+      await testService.deleteContact();
+      await testService.deleteUser();
+      await testService.createUser();
+      await testService.createContact();
+      await testService.createAddress();
+    });
+
+    it('should be rejected if contact is not found', async () => {
+      const contact = await testService.getContact();
+      const response = await request(app.getHttpServer())
+        .get(`/api/contacts/${contact!.id + 1}/addresses}`)
+        .set('authorization', 'test');
+      logger.info(response.body);
+
+      expect(response.status).toBe(404);
+      expect(response.body).toHaveProperty('errors');
+    });
+
+    it('should be able to list address', async () => {
+      const contact = await testService.getContact();
+      const response = await request(app.getHttpServer())
+        .get(`/api/contacts/${contact?.id}/addresses`)
+        .set('authorization', 'test');
+      logger.info(response.body);
+
+      expect(response.status).toBe(200);
+      const body = response.body as { data: AddressResponse[] };
+      const dataItem = body.data[0];
+      expect(body.data).toHaveLength(1);
+      expect(dataItem.id).toBeDefined();
+      expect(dataItem.street).toBe('street test');
+      expect(dataItem.city).toBe('city test');
+      expect(dataItem.province).toBe('province test');
+      expect(dataItem.country).toBe('country test');
+      expect(dataItem.postal_code).toBe('1111');
     });
   });
 });
