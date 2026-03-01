@@ -7,6 +7,7 @@ import {
   AddressResponse,
   CreateAddressRequest,
   GetAddressRequest,
+  RemoveAddressRequest,
   UpdateAddressRequest,
 } from '../model/address.model';
 import { Address, User } from '@prisma/client';
@@ -58,6 +59,7 @@ export class AddressService {
     this.logger.debug(
       `AddressService.create(${JSON.stringify(user)}, ${JSON.stringify(request)})`,
     );
+
     const createRequest: CreateAddressRequest = this.validationService.validate(
       AddressValidation.CREATE,
       request,
@@ -79,6 +81,7 @@ export class AddressService {
     this.logger.debug(
       `AddressService.get(${JSON.stringify(user)}, ${JSON.stringify(request)})`,
     );
+
     const getRequest: GetAddressRequest = this.validationService.validate(
       AddressValidation.GET,
       request,
@@ -126,6 +129,39 @@ export class AddressService {
         contact_id: address.contact_id,
       },
       data: updateRequest,
+    });
+
+    return this.toAddressResponse(address);
+  }
+
+  async remove(
+    user: User,
+    request: RemoveAddressRequest,
+  ): Promise<AddressResponse> {
+    this.logger.debug(
+      `AddressService.remove(${JSON.stringify(user)}, ${JSON.stringify(request)})`,
+    );
+
+    const removeRequest: RemoveAddressRequest = this.validationService.validate(
+      AddressValidation.REMOVE,
+      request,
+    );
+
+    await this.contactService.checkExistingContact(
+      user.username,
+      removeRequest.contact_id,
+    );
+
+    await this.checkExistingAddress(
+      removeRequest.contact_id,
+      removeRequest.address_id,
+    );
+
+    const address = await this.prismaService.address.delete({
+      where: {
+        id: removeRequest.address_id,
+        contact_id: removeRequest.contact_id,
+      },
     });
 
     return this.toAddressResponse(address);
