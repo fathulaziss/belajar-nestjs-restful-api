@@ -79,4 +79,60 @@ describe('AddressController', () => {
       });
     });
   });
+
+  describe('GET /api/contacts/:contactId/addresses/:addressId', () => {
+    beforeEach(async () => {
+      await testService.deleteAddress();
+      await testService.deleteContact();
+      await testService.deleteUser();
+      await testService.createUser();
+      await testService.createContact();
+      await testService.createAddress();
+    });
+
+    it('should be rejected if contact is not found', async () => {
+      const contact = await testService.getContact();
+      const address = await testService.getAddress();
+      const response = await request(app.getHttpServer())
+        .get(`/api/contacts/${contact!.id + 1}/addresses/${address?.id}`)
+        .set('authorization', 'test');
+      logger.info(response.body);
+
+      expect(response.status).toBe(404);
+      expect(response.body).toHaveProperty('errors');
+    });
+
+    it('should be rejected if address is not found', async () => {
+      const contact = await testService.getContact();
+      const address = await testService.getAddress();
+      const response = await request(app.getHttpServer())
+        .get(`/api/contacts/${contact?.id}/addresses/${address!.id + 1}`)
+        .set('authorization', 'test');
+      logger.info(response.body);
+
+      expect(response.status).toBe(404);
+      expect(response.body).toHaveProperty('errors');
+    });
+
+    it('should be able to get address', async () => {
+      const contact = await testService.getContact();
+      const address = await testService.getAddress();
+      const response = await request(app.getHttpServer())
+        .get(`/api/contacts/${contact?.id}/addresses/${address?.id}`)
+        .set('authorization', 'test');
+      logger.info(response.body);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('data.id');
+      expect(response.body).toMatchObject({
+        data: {
+          street: 'street test',
+          city: 'city test',
+          province: 'province test',
+          country: 'country test',
+          postal_code: '1111',
+        },
+      });
+    });
+  });
 });
